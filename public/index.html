@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Map - Unit Movement Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        
+        .game-area {
+            margin: 20px 0;
+        }
+        
+        #gameCanvas {
+            border: 3px solid #667eea;
+            background: #f9f9f9;
+            display: block;
+            margin: 0 auto 20px;
+            cursor: pointer;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .direction-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 80px;
+        }
+        
+        .direction-button:hover {
+            background: #5568d3;
+            transform: scale(1.05);
+        }
+        
+        .direction-button:active {
+            transform: scale(0.95);
+        }
+        
+        .north {
+            grid-column: 2;
+            grid-row: 1;
+        }
+        
+        .west {
+            grid-column: 1;
+            grid-row: 2;
+        }
+        
+        .east {
+            grid-column: 3;
+            grid-row: 2;
+        }
+        
+        .south {
+            grid-column: 2;
+            grid-row: 3;
+        }
+        
+        .button-grid {
+            display: inline-grid;
+            grid-template-columns: repeat(3, 80px);
+            gap: 10px;
+            margin: 20px auto;
+        }
+        
+        .info-box {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .info-box p {
+            margin: 8px 0;
+            color: #333;
+        }
+        
+        .coordinate-display {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 2px solid #667eea;
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-square {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+        }
+        
+        .unit-square {
+            background: #2196f3;
+        }
+        
+        .reset-button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        
+        .reset-button:hover {
+            background: #45a049;
+        }
+        
+        .keyboard-hint {
+            color: #999;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ 2D Map - Unit Movement</h1>
+        <p>Move the blue square around the map using directional controls!</p>
+        
+        <!-- The Game Canvas -->
+        <div class="game-area">
+            <canvas id="gameCanvas" width="600" height="600"></canvas>
+        </div>
+        
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-square unit-square"></div>
+                <span>Your Unit</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-square" style="background: #ddd; border: 1px solid #999;"></div>
+                <span>Map Grid</span>
+            </div>
+        </div>
+        
+        <!-- Current Position -->
+        <div class="info-box">
+            <p>Current Position:</p>
+            <div class="coordinate-display">
+                X: <span id="posX">5</span>, Y: <span id="posY">5</span>
+            </div>
+        </div>
+        
+        <!-- Direction Controls (in a grid layout) -->
+        <div class="button-grid">
+            <button class="direction-button north" onclick="moveUnit('north')">⬆️ North</button>
+            <button class="direction-button west" onclick="moveUnit('west')">⬅️ West</button>
+            <button class="direction-button east" onclick="moveUnit('east')">➡️ East</button>
+            <button class="direction-button south" onclick="moveUnit('south')">⬇️ South</button>
+        </div>
+        
+        <!-- Additional Controls -->
+        <div>
+            <button class="reset-button" onclick="resetUnit()">🔄 Reset Position</button>
+        </div>
+        
+        <div class="keyboard-hint">
+            💡 Tip: You can also use arrow keys on your keyboard!
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // GAME VARIABLES
+        // ============================================
+        
+        // Canvas setup
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Unit position
+        let unitX = 5;  // Start at the middle (column)
+        let unitY = 5;  // Start at the middle (row)
+        
+        // Map settings
+        const mapWidth = 10;   // 10 columns (0-9)
+        const mapHeight = 10;  // 10 rows (0-9)
+        const tileSize = canvas.width / mapWidth;  // Each tile is 60 pixels
+        
+        // ============================================
+        // DRAWING FUNCTION
+        // ============================================
+        
+        function drawMap() {
+            // Clear the canvas (make it white)
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid lines
+            ctx.strokeStyle = '#ddd';
+            ctx.lineWidth = 1;
+            
+            // Vertical lines
+            for (let i = 0; i <= mapWidth; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * tileSize, 0);
+                ctx.lineTo(i * tileSize, canvas.height);
+                ctx.stroke();
+            }
+            
+            // Horizontal lines
+            for (let i = 0; i <= mapHeight; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * tileSize);
+                ctx.lineTo(canvas.width, i * tileSize);
+                ctx.stroke();
+            }
+            
+            // Draw the unit (blue square)
+            ctx.fillStyle = '#2196f3';
+            ctx.fillRect(
+                unitX * tileSize + 5,      // X position with 5px padding
+                unitY * tileSize + 5,      // Y position with 5px padding
+                tileSize - 10,              // Width (with padding)
+                tileSize - 10               // Height (with padding)
+            );
+            
+            // Draw a border around the unit
+            ctx.strokeStyle = '#1976d2';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(
+                unitX * tileSize + 5,
+                unitY * tileSize + 5,
+                tileSize - 10,
+                tileSize - 10
+            );
+        }
+        
+        // ============================================
+        // MOVEMENT FUNCTION
+        // ============================================
+        
+        function moveUnit(direction) {
+            // Save old position (in case we need to undo)
+            const oldX = unitX;
+            const oldY = unitY;
+            
+            // Move based on direction
+            if (direction === 'north') {
+                unitY--;  // Move up (decrease Y)
+            } else if (direction === 'south') {
+                unitY++;  // Move down (increase Y)
+            } else if (direction === 'west') {
+                unitX--;  // Move left (decrease X)
+            } else if (direction === 'east') {
+                unitX++;  // Move right (increase X)
+            }
+            
+            // Check if the new position is valid (stays on the map)
+            if (unitX < 0 || unitX >= mapWidth || unitY < 0 || unitY >= mapHeight) {
+                // Undo the move if it goes off the map
+                unitX = oldX;
+                unitY = oldY;
+                console.log('❌ Cannot move off the map!');
+            } else {
+                console.log(`✅ Moved ${direction} to (${unitX}, ${unitY})`);
+            }
+            
+            // Update the display
+            updateDisplay();
+            
+            // Redraw the map with new unit position
+            drawMap();
+        }
+        
+        // ============================================
+        // UPDATE DISPLAY
+        // ============================================
+        
+        function updateDisplay() {
+            // Update the coordinate display
+            document.getElementById('posX').textContent = unitX;
+            document.getElementById('posY').textContent = unitY;
+        }
+        
+        // ============================================
+        // RESET FUNCTION
+        // ============================================
+        
+        function resetUnit() {
+            unitX = 5;
+            unitY = 5;
+            console.log('🔄 Unit reset to starting position');
+            updateDisplay();
+            drawMap();
+        }
+        
+        // ============================================
+        // KEYBOARD CONTROLS
+        // ============================================
+        
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowUp') {
+                moveUnit('north');
+                event.preventDefault();  // Prevent page scrolling
+            } else if (event.key === 'ArrowDown') {
+                moveUnit('south');
+                event.preventDefault();
+            } else if (event.key === 'ArrowLeft') {
+                moveUnit('west');
+                event.preventDefault();
+            } else if (event.key === 'ArrowRight') {
+                moveUnit('east');
+                event.preventDefault();
+            }
+        });
+        
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        
+        // Draw the map when the page loads
+        drawMap();
+        updateDisplay();
+    </script>
+</body>
+</html>

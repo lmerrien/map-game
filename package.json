@@ -1,0 +1,12 @@
+{
+  "name": "2d-map-game",
+  "version": "1.0.0",
+  "description": "A simple 2D map game with unit movement",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": ["game", "map", "unit", "movement", "canvas"],
+  "author": "Your Name",
+  "license": "MIT"
+}
