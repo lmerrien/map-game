@@ -12,6 +12,7 @@ Needs Node 18 or newer. No dependencies.
 
 ```
 npm start            # http://localhost:3000
+npm run dev          # same, restarts by itself when a file changes (after a git pull, say)
 npm test             # engine + API smoke test (Node only)
 ```
 
