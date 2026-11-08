@@ -1,12 +1,12 @@
 {
-  "name": "2d-map-game",
-  "version": "1.0.0",
-  "description": "A simple 2D map game with unit movement",
+  "name": "allegeance",
+  "version": "0.1.0",
+  "description": "Allégeance: a persistent multiplayer game of lords, vassals and shifting oaths, inspired by Diplomacy.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node test/smoke.js"
   },
-  "keywords": ["game", "map", "unit", "movement", "canvas"],
-  "author": "Your Name",
-  "license": "MIT"
+  "engines": { "node": ">=18" },
+  "license": "UNLICENSED"
 }
